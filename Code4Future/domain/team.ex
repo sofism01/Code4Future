@@ -3,43 +3,43 @@ defmodule Domain.Team do
   Representa un equipo de la hackathon.
   """
 
-  defstruct [:id, :name, :members, :project_id]
+  defstruct [:id, :nombre, :miembros, :id_proyecto]
 
   @doc """
   Crea un nuevo equipo con el nombre dado.
   """
-  def create_team(name) do
+  def crear_equipo(nombre) do
     %__MODULE__{
       id: System.unique_integer([:positive]),
-      name: name,
-      members: [],
-      project_id: nil
+      nombre: nombre,
+      miembros: [],
+      id_proyecto: nil
     }
   end
 
   @doc """
   Agrega un participante al equipo.
   """
-  def add_member(team, participant) do
-    if has_member?(team, participant.id) do
-      team
+  def agregar_miembro(equipo, participante) do
+    if existe_miembro?(equipo, participante.id) do
+      equipo
     else
-      %{team | members: [participant | team.members]}
+      %{equipo | miembros: [participante | equipo.miembros]}
     end
   end
 
   @doc """
   Remueve un participante del equipo.
   """
-  def remove_member(team, participant) do
-    nuevos_miembros = Enum.reject(team.members, fn member -> member.id == participant.id end)
-    %{team | members: nuevos_miembros}
+  def eliminar_miembro(equipo, participante) do
+    nuevos_miembros = Enum.reject(equipo.miembros, fn miembro -> miembro.id == participante.id end)
+    %{equipo | miembros: nuevos_miembros}
   end
 
   @doc """
   Verifica si un equipo tiene un miembro con el ID de participante dado.
   """
-  def has_member?(team, participant_id) do
-    Enum.any?(team.members, fn member -> member.id == participant_id end)
+  def existe_miembro?(equipo, participante_id) do
+    Enum.any?(equipo.miembros, fn miembro -> miembro.id == participante_id end)
   end
 end

@@ -62,7 +62,7 @@ defmodule Main do
                 agregar_miembro_loop(nombre_equipo, contador + 1)
 
               {:error, mensaje} ->
-                IO.puts("❌ Error: #{mensaje}")
+                IO.puts("Error: #{mensaje}")
                 agregar_miembro_loop(nombre_equipo, contador)
             end
 
@@ -103,5 +103,3 @@ defmodule Main do
   end
 
 end
-
- 

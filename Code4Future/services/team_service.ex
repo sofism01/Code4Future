@@ -73,11 +73,11 @@ defmodule Services.TeamService do
 
   # Funciones privadas
 
-  defp guardar_equipo(equipo) do # Guardar equipo en CSV
-    crear_csv_si_no_existe()
-    equipo_fila = equipo_a_fila_csv(equipo)
-    File.write!(@csv_file, equipo_fila <> "\n", [:append])
-  end
+  defp guardar_equipo(equipo) do
+  crear_csv_si_no_existe()
+  equipo_fila = equipo_a_fila_csv(equipo)
+  File.write!(@csv_file, equipo_fila <> "\n", [:append])
+end
 
   defp actualizar_equipo_en_csv(equipo_actualizado) do # Actualizar equipo en CSV
     equipos = listar_equipos()
@@ -88,13 +88,13 @@ defmodule Services.TeamService do
     guardar_todos_los_equipos(equipos_actualizados)
   end
 
-  defp guardar_todos_los_equipos(equipos) do # Sobrescribir CSV con todos los equipos
-    encabezado = "id, nombre, cantidad_miembros, id_proyecto\n"
-    contenido_csv = encabezado <>
-      Enum.map_join(equipos, "\n", &equipo_a_fila_csv/1)
-
-    File.write!(@csv_file, contenido_csv)
-  end
+ defp guardar_todos_los_equipos(equipos) do # Sobrescribir CSV con todos los equipos
+  encabezado = "id, nombre, cantidad_miembros, id_proyecto\n"
+  contenido_csv = encabezado <>
+    Enum.map_join(equipos, "\n", &equipo_a_fila_csv/1) <>
+    "\n" 
+  File.write!(@csv_file, contenido_csv)
+end
 
   defp equipo_a_fila_csv(equipo) do # Convertir equipo a fila CSV
     cantidad_miembros = length(equipo.miembros || [])
@@ -105,7 +105,7 @@ defmodule Services.TeamService do
   # Dividir por coma y quitar espacios de cada elemento
   campos = linea
            |> String.split(",")
-           |> Enum.map(&String.trim/1) 
+           |> Enum.map(&String.trim/1)
 
   case campos do
     [id, nombre, _cantidad_miembros, id_proyecto] ->
@@ -122,9 +122,9 @@ rescue
   _ -> nil
 end
 
-  defp crear_csv_si_no_existe do # Crear archivo CSV si no existe
-    unless File.exists?(@csv_file) do
-      File.write!(@csv_file, "id, nombre, cantidad_miembros, id_proyecto\n")
-    end
+ defp crear_csv_si_no_existe do
+  unless File.exists?(@csv_file) do
+    File.write!(@csv_file, "id, nombre, cantidad_miembros, id_proyecto\n")
+  end
   end
 end

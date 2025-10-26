@@ -4,9 +4,8 @@ defmodule Services.TeamService do
   """
 
   alias Domain.Team
-  alias Domain.Participant
 
-  @csv_file "teams.csv"  # Ruta del archivo CSV
+  @csv_file "teams.csv"
 
   @doc """
   Crea un nuevo equipo con el nombre dado.
@@ -72,13 +71,15 @@ defmodule Services.TeamService do
     end
   end
 
-  defp guardar_equipo(equipo) do
+  # Funciones privadas
+
+  defp guardar_equipo(equipo) do # Guardar equipo en CSV
     crear_csv_si_no_existe()
     equipo_fila = equipo_a_fila_csv(equipo)
     File.write!(@csv_file, equipo_fila <> "\n", [:append])
   end
 
-  defp actualizar_equipo_en_csv(equipo_actualizado) do
+  defp actualizar_equipo_en_csv(equipo_actualizado) do # Actualizar equipo en CSV
     equipos = listar_equipos()
     equipos_actualizados = Enum.map(equipos, fn equipo ->
       if equipo.id == equipo_actualizado.id, do: equipo_actualizado, else: equipo
@@ -87,37 +88,43 @@ defmodule Services.TeamService do
     guardar_todos_los_equipos(equipos_actualizados)
   end
 
-  defp guardar_todos_los_equipos(equipos) do
-    encabezado = "id,nombre,cantidad_miembros,id_proyecto\n"
+  defp guardar_todos_los_equipos(equipos) do # Sobrescribir CSV con todos los equipos
+    encabezado = "id, nombre, cantidad_miembros, id_proyecto\n"
     contenido_csv = encabezado <>
       Enum.map_join(equipos, "\n", &equipo_a_fila_csv/1)
 
     File.write!(@csv_file, contenido_csv)
   end
 
-  defp equipo_a_fila_csv(equipo) do
+  defp equipo_a_fila_csv(equipo) do # Convertir equipo a fila CSV
     cantidad_miembros = length(equipo.miembros || [])
-    "#{equipo.id},#{equipo.nombre},#{cantidad_miembros},#{equipo.id_proyecto || ""}"
+    "#{equipo.id}, #{equipo.nombre}, #{cantidad_miembros}, #{equipo.id_proyecto || ""}"
   end
 
-  defp parsear_equipo_desde_csv(linea) do
-    case String.split(linea, ",") do
-      [id, nombre, _cantidad_miembros, id_proyecto] ->
-        %Domain.Team{
-          id: String.to_integer(id),
-          nombre: nombre,
-          miembros: [],  # Los miembros se manejan por separado
-          id_proyecto: if(id_proyecto == "", do: nil, else: id_proyecto)
-        }
-      _ -> nil
-    end
-  rescue
+ defp parsear_equipo_desde_csv(linea) do # Parsear fila CSV a struct Equipo
+  # Dividir por coma y quitar espacios de cada elemento
+  campos = linea
+           |> String.split(",")
+           |> Enum.map(&String.trim/1) 
+
+  case campos do
+    [id, nombre, _cantidad_miembros, id_proyecto] ->
+      equipo = Team.crear_equipo(nombre)
+      proyecto = if(id_proyecto == "", do: nil, else: id_proyecto)
+
+      %{equipo |
+        id: String.to_integer(id),
+        id_proyecto: proyecto
+      }
     _ -> nil
   end
+rescue
+  _ -> nil
+end
 
-  defp crear_csv_si_no_existe do
+  defp crear_csv_si_no_existe do # Crear archivo CSV si no existe
     unless File.exists?(@csv_file) do
-      File.write!(@csv_file, "id,nombre,cantidad_miembros,id_proyecto\n")
+      File.write!(@csv_file, "id, nombre, cantidad_miembros, id_proyecto\n")
     end
   end
 end

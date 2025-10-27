@@ -88,7 +88,32 @@ defmodule Services.ProjectService do
     end
   end
 
-   
+    @doc """
+  Obtiene estadísticas generales de proyectos.
+  """
+  def obtener_estadisticas_proyectos do
+    proyectos = listar_proyectos()
+
+    categorias = proyectos
+                |> Enum.map(& &1.categoria)
+                |> Enum.frequencies()
+
+    progreso_promedio = case length(proyectos) do
+      0 -> 0
+      count ->
+        proyectos
+        |> Enum.map(& &1.progreso)
+        |> Enum.sum()
+        |> div(count)
+    end
+
+    %{
+      total_proyectos: length(proyectos),
+      categorias: categorias,
+      progreso_promedio: progreso_promedio,
+      proyectos_completos: Enum.count(proyectos, fn p -> p.progreso == 100 end)
+    }
+  end
 
   # Funciones privadas
 

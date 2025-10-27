@@ -2,7 +2,7 @@ defmodule Domain.Participant do
   @moduledoc """
   Representa un participante de la hackathon.
   """
-
+  
   defstruct [:id, :nombre, :habilidades, :team_id]
 
   @doc """

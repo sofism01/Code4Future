@@ -1,6 +1,12 @@
 defmodule Main do
+  @moduledoc """
+  Módulo principal para la creación de equipos en la hackathon.
+  """
   alias Services.TeamService
 
+  @doc """
+  Función principal que inicia el proceso de creación de equipos.
+  """
   def main do
     IO.puts("=== CREACIÓN DE EQUIPOS HACKATHON ===")
     IO.puts("")

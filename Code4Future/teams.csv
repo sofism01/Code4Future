@@ -1,3 +1,2 @@
-id, nombre, cantidad_miembros, id_proyecto
-1287, poki, 0, 
-1286, avengers, 1, 
+id, nombre, cantidad_miembros, id_proyecto, miembros
+1541, avengers, 3, , 5:Participante 5;3:Participante 3;1:Participante 1

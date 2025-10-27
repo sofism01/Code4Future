@@ -42,7 +42,7 @@ defmodule Domain.Team do
   """
   def eliminar_miembro(equipo, participante) do
     # Encontrar el participante y resetear su team_id
-  participante_sin_equipo = %{participante | team_id: nil}
+  # participante_sin_equipo = %{participante | team_id: nil}
 
   nuevos_miembros = Enum.reject(equipo.miembros, fn miembro ->
     miembro.id == participante.id

@@ -12,7 +12,7 @@ defmodule Services.ProjectService do
   """
   def registrar_proyecto(team_id, titulo, descripcion, categoria) do
     # Verificar que el equipo no tenga ya un proyecto
-    case get_project_by_team(team_id) do
+    case obtener_proyecto_por_equipo(team_id) do
       nil ->
         proyecto = Project.crear_proyecto(team_id, titulo, descripcion, categoria)
         guardar_proyecto(proyecto)

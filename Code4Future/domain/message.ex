@@ -22,7 +22,7 @@ defmodule Domain.Message do
   Obtiene información formateada del mensaje.
   """
   def formato_mensaje(message) do
-    formatted_time = format_timestamp(message.timestamp)
+    formatted_time = formatear_timestamp(message.timestamp)
     "[#{formatted_time}] Usuario #{message.sender_id}: #{message.contenido}"
   end
 

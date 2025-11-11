@@ -4,6 +4,7 @@ defmodule Main do
   """
   alias Services.TeamService
   alias Services.ProjectService
+  alias Services.MentorService
 
   @doc """
   Función principal que inicia el proceso de gestión de la hackathon.
@@ -20,6 +21,9 @@ defmodule Main do
 
     # Crear proyecto para el equipo
     crear_proyecto_para_equipo(equipo)
+
+    # Registrar mentor (NUEVO)
+    registrar_mentor_para_equipo(equipo)
 
     # Mostrar resultado final
     mostrar_resumen_final(equipo.nombre)

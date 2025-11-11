@@ -475,7 +475,7 @@ defmodule Main do
   end
 
   defp mostrar_mentor_asignado(team_id) do
-    teams_mentors = MentorService.list_active_assignments()
+    teams_mentors = MentorService.list_mentors()
                    |> Enum.filter(fn asignacion -> asignacion.team_id == team_id end)
 
     if length(teams_mentors) > 0 do

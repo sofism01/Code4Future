@@ -107,6 +107,208 @@ defmodule Main do
     end
   end
 
+  defp registrar_mentor_para_equipo(equipo) do
+    IO.puts("REGISTRO DE MENTOR")
+    IO.write("¿Deseas registrar un mentor para este equipo? (s/n): ")
+    respuesta = IO.read(:line) |> String.trim() |> String.downcase()
+
+    case respuesta do
+      "s" ->
+        registrar_mentor_interactivo(equipo.id)
+      "si" ->
+        registrar_mentor_interactivo(equipo.id)
+      "y" ->
+        registrar_mentor_interactivo(equipo.id)
+      "yes" ->
+        registrar_mentor_interactivo(equipo.id)
+      _ ->
+        IO.puts("Saltando registro de mentor.")
+        IO.puts("")
+    end
+  end
+
+  defp registrar_mentor_interactivo(team_id) do
+    IO.puts("=== DATOS DEL MENTOR ===")
+
+    IO.puts("¿Qué deseas hacer?")
+    IO.puts("1. Registrar nuevo mentor")
+    IO.puts("2. Asignar mentor existente")
+    IO.write("Elige una opción (1-2): ")
+
+    opcion = IO.read(:line) |> String.trim()
+
+    case opcion do
+      "1" ->
+        crear_nuevo_mentor(team_id)
+      "2" ->
+        asignar_mentor_existente(team_id)
+      _ ->
+        IO.puts("Opción inválida. Intenta de nuevo.")
+        registrar_mentor_interactivo(team_id)
+    end
+  end
+
+  defp crear_nuevo_mentor(team_id) do
+    nombre = solicitar_nombre_mentor()
+    experiencia = solicitar_experiencia_mentor()
+
+    case MentorService.register_mentor(nombre, experiencia) do
+      {:ok, mentor} ->
+        IO.puts("Mentor '#{mentor.nombre}' registrado exitosamente!")
+        IO.puts("ID del mentor: #{mentor.id}")
+        IO.puts("Experiencia: #{Enum.join(mentor.experiencia, ", ")}")
+        IO.puts("")
+
+        case MentorService.assign_to_team(mentor.id, team_id) do
+          {:ok, _asignacion} ->
+            IO.puts("Mentor asignado al equipo exitosamente!")
+            enviar_feedback_inicial(mentor.id, team_id)
+
+          {:error, mensaje} ->
+            IO.puts("Error al asignar mentor: #{mensaje}")
+        end
+
+      {:error, mensaje} ->
+        IO.puts("Error al crear mentor: #{mensaje}")
+        IO.puts("")
+    end
+  end
+
+  defp asignar_mentor_existente(team_id) do
+    mentores = MentorService.list_mentors()
+
+    if length(mentores) == 0 do
+      IO.puts("No hay mentores registrados. Creando nuevo mentor...")
+      crear_nuevo_mentor(team_id)
+    else
+      IO.puts("MENTORES DISPONIBLES:")
+      Enum.with_index(mentores, 1) |> Enum.each(fn {mentor, index} ->
+        experiencia_str = Enum.join(mentor.experiencia, ", ")
+        IO.puts("   #{index}. #{mentor.nombre} (#{experiencia_str})")
+      end)
+
+      IO.write("Selecciona un mentor (número) o '0' para crear uno nuevo: ")
+      input = IO.read(:line) |> String.trim()
+
+      case Integer.parse(input) do
+        {0, ""} ->
+          crear_nuevo_mentor(team_id)
+
+        {numero, ""} when numero > 0 and numero <= length(mentores) ->
+          mentor_seleccionado = Enum.at(mentores, numero - 1)
+
+          case MentorService.assign_to_team(mentor_seleccionado.id, team_id) do
+            {:ok, _asignacion} ->
+              IO.puts("Mentor #{mentor_seleccionado.nombre} asignado al equipo!")
+              enviar_feedback_inicial(mentor_seleccionado.id, team_id)
+
+            {:error, mensaje} ->
+              IO.puts("Error al asignar mentor: #{mensaje}")
+          end
+
+        _ ->
+          IO.puts("Selección inválida. Intenta de nuevo.")
+          asignar_mentor_existente(team_id)
+      end
+    end
+  end
+
+  defp solicitar_nombre_mentor do
+    IO.write("Ingresa el nombre del mentor: ")
+    nombre = IO.read(:line) |> String.trim()
+
+    if nombre == "" do
+      IO.puts("El nombre no puede estar vacío.")
+      solicitar_nombre_mentor()
+    else
+      nombre
+    end
+  end
+
+  defp solicitar_experiencia_mentor do
+    IO.puts("Selecciona las áreas de experiencia del mentor:")
+    IO.puts("1. Web")
+    IO.puts("2. Mobile")
+    IO.puts("3. AI/ML")
+    IO.puts("4. Gaming")
+    IO.puts("5. IoT")
+    IO.puts("6. Desktop")
+    IO.puts("7. Cloud")
+    IO.puts("8. Security")
+    IO.puts("")
+    IO.puts("Puedes seleccionar múltiples opciones separadas por coma (ej: 1,3,7)")
+    IO.write("O escribe áreas personalizadas: ")
+
+    input = IO.read(:line) |> String.trim()
+
+    if String.contains?(input, ",") or Regex.match?(~r/^\d+$/, input) do
+      numeros = input
+                |> String.split(",")
+                |> Enum.map(&String.trim/1)
+                |> Enum.map(&Integer.parse/1)
+                |> Enum.filter(fn
+                  {_num, ""} -> true
+                  _ -> false
+                end)
+                |> Enum.map(fn {num, ""} -> num end)
+
+      experiencias = Enum.map(numeros, fn num ->
+        case num do
+          1 -> "Web"
+          2 -> "Mobile"
+          3 -> "AI/ML"
+          4 -> "Gaming"
+          5 -> "IoT"
+          6 -> "Desktop"
+          7 -> "Cloud"
+          8 -> "Security"
+          _ -> nil
+        end
+      end) |> Enum.filter(&(&1 != nil))
+
+      if length(experiencias) > 0 do
+        experiencias
+      else
+        IO.puts("Selección inválida. Intenta de nuevo.")
+        solicitar_experiencia_mentor()
+      end
+    else
+      if input == "" do
+        IO.puts("Debes especificar al menos un área de experiencia.")
+        solicitar_experiencia_mentor()
+      else
+        [input]
+      end
+    end
+  end
+
+  defp enviar_feedback_inicial(mentor_id, team_id) do
+    IO.write("¿Quieres que el mentor envíe un feedback inicial? (s/n): ")
+    respuesta = IO.read(:line) |> String.trim() |> String.downcase()
+
+    case respuesta do
+      "s" ->
+        IO.write("Ingresa el feedback inicial: ")
+        feedback = IO.read(:line) |> String.trim()
+
+        if feedback != "" do
+          case MentorService.send_feedback(mentor_id, team_id, feedback) do
+            {:ok, _feedback_record} ->
+              IO.puts("Feedback inicial enviado!")
+            {:error, mensaje} ->
+              IO.puts("Error al enviar feedback: #{mensaje}")
+          end
+        end
+
+      "si" ->
+        enviar_feedback_inicial(mentor_id, team_id)
+
+      _ ->
+        IO.puts("Saltando feedback inicial.")
+    end
+
+    IO.puts("")
+  end
 
   defp crear_proyecto_interactivo(team_id) do
     IO.puts("=== DATOS DEL PROYECTO ===")
@@ -262,8 +464,40 @@ defmodule Main do
         end
 
         IO.puts("")
+
+        # Mostrar mentor asignado
+        mostrar_mentor_asignado(equipo.id)
+
+        IO.puts("")
         IO.puts("Datos guardados en CSV")
         IO.puts("¡Todo listo para la hackathon!")
+    end
+  end
+
+  defp mostrar_mentor_asignado(team_id) do
+    teams_mentors = MentorService.list_active_assignments()
+                   |> Enum.filter(fn asignacion -> asignacion.team_id == team_id end)
+
+    if length(teams_mentors) > 0 do
+      IO.puts("MENTOR ASIGNADO:")
+      Enum.each(teams_mentors, fn asignacion ->
+        mentores = MentorService.list_mentors()
+        mentor = Enum.find(mentores, fn m -> m.id == asignacion.mentor_id end)
+
+        if mentor do
+          experiencia_str = Enum.join(mentor.experiencia, ", ")
+          IO.puts("Nombre: #{mentor.nombre}")
+          IO.puts("Experiencia: #{experiencia_str}")
+          IO.puts("Asignado: #{DateTime.to_date(asignacion.assigned_at)}")
+
+          feedbacks = MentorService.get_team_feedbacks(team_id)
+          if length(feedbacks) > 0 do
+            IO.puts("Feedbacks recibidos: #{length(feedbacks)}")
+          end
+        end
+      end)
+    else
+      IO.puts("Sin mentor asignado")
     end
   end
 

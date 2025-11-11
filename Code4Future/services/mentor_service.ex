@@ -161,7 +161,7 @@ defmodule Services.MentorService do
   """
   def obtener_estadisticas do
     mentores = listar_mentores()
-    asignaciones = list_active_assignments()
+    asignaciones = listar_asignaciones_activas()
     feedbacks = listar_feedbacks()
 
     mentores_activos = asignaciones

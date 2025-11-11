@@ -10,7 +10,7 @@ defmodule Domain.Mentor do
   @doc """
   Crea un nuevo mentor con nombre y área de experiencia.
   """
-  def create_mentor(nombre, experiencia) do
+  def crear_mentor(nombre, experiencia) do
     %__MODULE__{
       id: System.unique_integer([:positive]),
       nombre: nombre,

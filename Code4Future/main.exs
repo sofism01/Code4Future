@@ -79,10 +79,6 @@ defmodule Main do
         comando_join(nombre_equipo)
         :continuar
 
-      ["/chat", nombre_equipo] ->
-        comando_chat(nombre_equipo)
-        :continuar
-
       ["/help"] ->
         mostrar_ayuda()
         :continuar
@@ -187,25 +183,7 @@ defmodule Main do
     IO.puts("")
   end
 
-  defp comando_chat(nombre_equipo) do
-    case TeamService.obtener_equipo_por_nombre(nombre_equipo) do
-      nil ->
-        IO.puts("Equipo '#{nombre_equipo}' no encontrado.")
 
-      _equipo ->
-        IO.puts("CHAT DEL EQUIPO: #{nombre_equipo}")
-        IO.puts("================================")
-        IO.puts("Funcionalidad de chat en desarrollo...")
-        IO.puts("Por ahora, usa los servicios de chat separados:")
-        IO.puts("- Para servidor: elixir services/chat_server.exs")
-        IO.puts("- Para cliente: elixir services/chat_client.exs")
-        IO.puts("")
-
-        # Aquí podrías integrar con tu chat_client.exs
-        # Por ejemplo: System.cmd("elixir", ["services/chat_client.exs"])
-    end
-    IO.puts("")
-  end
 
   defp mostrar_ayuda do
     IO.puts("COMANDOS DISPONIBLES:")
@@ -213,15 +191,13 @@ defmodule Main do
     IO.puts("/teams                    → Listar equipos registrados")
     IO.puts("/project <nombre_equipo>  → Mostrar información del proyecto de un equipo")
     IO.puts("/join <nombre_equipo>     → Unirse a un equipo")
-    IO.puts("/chat <nombre_equipo>     → Ingresar al canal de chat de un equipo")
     IO.puts("/help                     → Mostrar esta ayuda")
     IO.puts("exit / salir              → Salir del modo comandos")
     IO.puts("")
     IO.puts("Ejemplos:")
     IO.puts("  /teams")
-    IO.puts("  /project vengadores")
-    IO.puts("  /join vengadores")
-    IO.puts("  /chat vengadores")
+    IO.puts("  /project equipo1")
+    IO.puts("  /join equipo1")
     IO.puts("")
   end
 
@@ -281,8 +257,6 @@ defmodule Main do
     IO.write("Presiona Enter para continuar...")
     IO.read(:line)
   end
-
-  # ... resto de funciones existentes (crear_equipo, agregar_miembros, etc.) ...
 
   defp crear_equipo do
     IO.puts("CREAR NUEVO EQUIPO")
@@ -586,7 +560,7 @@ defmodule Main do
         IO.puts("Progreso inicial: #{proyecto.progreso}%")
         IO.puts("")
 
-        # Preguntar si quiere actualizar el progreso inicial
+        # Preguntar si se quiere actualizar el progreso inicial
         actualizar_progreso_inicial(team_id)
 
       {:error, mensaje} ->

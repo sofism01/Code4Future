@@ -1,4 +1,7 @@
 defmodule ChatClient do
+  @moduledoc """
+  Módulo cliente para interactuar con el ChatServer.
+  """
   use GenServer
 
   @default_room :equipo

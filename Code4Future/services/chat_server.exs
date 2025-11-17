@@ -1,4 +1,7 @@
 defmodule ChatServer do
+  @moduledoc """
+  Módulo servidor para gestionar el chat con múltiples salas.
+  """
   use GenServer
 
   @default_room :equipo

@@ -81,11 +81,11 @@ defmodule ChatServer do
   def handle_call({:unirse, sala, user_id, pid}, _from, state) do
     case Map.get(state.salas, sala) do
       nil ->
-        IO.puts("❌ Error: la sala #{sala} no existe. El usuario #{user_id} no puede unirse.")
+        IO.puts("Error: la sala #{sala} no existe. El usuario #{user_id} no puede unirse.")
         {:reply, false, state}
 
       %{usuarios: usuarios} ->
-        IO.puts("👤 Usuario #{user_id} se ha unido a la sala #{sala}.")
+        IO.puts("Usuario #{user_id} se ha unido a la sala #{sala}.")
         new_usuarios = [{user_id, pid} | usuarios]
         new_state = put_in(state, [:salas, sala, :usuarios], new_usuarios)
         {:reply, true, new_state}
@@ -101,10 +101,10 @@ defmodule ChatServer do
   # Crear sala
   def handle_cast({:crear_sala, sala}, state) do
     if Map.has_key?(state.salas, sala) do
-      IO.puts("⚠️ La sala #{sala} ya existe.")
+      IO.puts("La sala #{sala} ya existe.")
       {:noreply, state}
     else
-      IO.puts("✅ Sala #{sala} creada correctamente.")
+      IO.puts("Sala #{sala} creada correctamente.")
       new_state = put_in(state, [:salas, sala], %{usuarios: [], mensajes: []})
       {:noreply, new_state}
     end
@@ -112,7 +112,7 @@ defmodule ChatServer do
 
   # Crear anuncio (global)
   def handle_cast({:crear_anuncio, mensaje}, state) do
-    IO.puts("📢 Anuncio creado: #{mensaje}")
+    IO.puts("Anuncio creado: #{mensaje}")
     message = %{sender_id: "admin", contenido: mensaje, timestamp: DateTime.utc_now()}
     new_anuncios = [message | state.anuncios]
     new_state = %{state | anuncios: new_anuncios}
@@ -129,11 +129,11 @@ defmodule ChatServer do
   def handle_cast({:desconectarse, sala, user_id, pid}, state) do
     case Map.get(state.salas, sala) do
       nil ->
-        IO.puts("⚠️ No se puede salir: la sala #{sala} no existe.")
+        IO.puts("No se puede salir: la sala #{sala} no existe.")
         {:noreply, state}
 
       %{usuarios: usuarios} ->
-        IO.puts("👋 Usuario #{user_id} ha salido de la sala #{sala}.")
+        IO.puts("Usuario #{user_id} ha salido de la sala #{sala}.")
         new_usuarios = Enum.reject(usuarios, fn {id, p} -> id == user_id and p == pid end)
         new_state = put_in(state, [:salas, sala, :usuarios], new_usuarios)
         {:noreply, new_state}
@@ -156,7 +156,7 @@ defmodule ChatServer do
   def main do
     Node.start(:"chat_server@localhost", :shortnames)
     {:ok, _pid} = ChatServer.start_link()
-    IO.puts("💬 Chat server iniciado. Sala principal: #{@default_room}")
+    IO.puts("Chat server iniciado. Sala principal: #{@default_room}")
     :timer.sleep(:infinity)
   end
 end

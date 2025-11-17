@@ -9,8 +9,8 @@ defmodule ChatClient do
     server = :"chat_server@localhost"
 
     case Node.connect(server) do
-      true -> IO.puts("✅ Conectado al chat server.")
-      false -> IO.puts("❌ No se pudo conectar al chat server.")
+      true -> IO.puts("Conectado al chat server.")
+      false -> IO.puts("No se pudo conectar al chat server.")
     end
 
     GenServer.start_link(__MODULE__, %{server: server, en_chat: false, user_id: "", sala_actual: @default_room}, name: __MODULE__)
@@ -41,7 +41,7 @@ defmodule ChatClient do
     case respuesta do
       {:ok, mensajes} -> {:reply, mensajes, state}
       {:error, :sala_no_existe} ->
-        IO.puts("⚠️ La sala #{state.sala_actual} no existe.")
+        IO.puts("La sala #{state.sala_actual} no existe.")
         {:reply, [], state}
     end
   end
@@ -50,10 +50,10 @@ defmodule ChatClient do
     respuesta = GenServer.call({ChatServer, state.server}, {:listar_personas, state.sala_actual})
     case respuesta do
       {:ok, lista} ->
-        IO.puts("👥 Personas en la sala #{state.sala_actual}: " <> Enum.join(lista, ", "))
+        IO.puts("Personas en la sala #{state.sala_actual}: " <> Enum.join(lista, ", "))
         {:reply, lista, state}
       {:error, :sala_no_existe} ->
-        IO.puts("⚠️ La sala #{state.sala_actual} no existe.")
+        IO.puts("La sala #{state.sala_actual} no existe.")
         {:reply, [], state}
     end
   end
@@ -64,14 +64,14 @@ defmodule ChatClient do
       {:reply, response, state}
     rescue
       error ->
-        IO.puts("❌ Error al enviar mensaje: #{inspect(error)}")
+        IO.puts("Error al enviar mensaje: #{inspect(error)}")
         {:reply, {:error, error}, state}
     end
   end
 
   def handle_call(:listar_salas, _from, state) do
     salas = GenServer.call({ChatServer, state.server}, :listar_salas)
-    IO.puts("💬 Salas disponibles: " <> Enum.join(Enum.map(salas, &Atom.to_string/1), ", "))
+    IO.puts("Salas disponibles: " <> Enum.join(Enum.map(salas, &Atom.to_string/1), ", "))
     {:reply, salas, state}
   end
 
@@ -80,11 +80,11 @@ defmodule ChatClient do
     respuesta = GenServer.call({ChatServer, state.server}, {:unirse, sala_atom, state.user_id, self()})
     case respuesta do
       true ->
-        IO.puts("👤 Te has unido a la sala #{nombre}.")
+        IO.puts("Te has unido a la sala #{nombre}.")
         {:reply, :ok, %{state | sala_actual: sala_atom}}
 
       _ ->
-        IO.puts("❌ No se pudo unir a la sala #{nombre}.")
+        IO.puts("No se pudo unir a la sala #{nombre}.")
         {:reply, :error, state}
     end
   end
@@ -93,14 +93,14 @@ defmodule ChatClient do
 
   def handle_cast({:unirse, user_id}, state) do
     GenServer.call({ChatServer, state.server}, {:unirse, state.sala_actual, user_id, self()})
-    IO.puts("👤 Te has unido a la sala #{state.sala_actual}.")
+    IO.puts("Te has unido a la sala #{state.sala_actual}.")
     {:noreply, %{state | user_id: user_id}}
   end
 
   def handle_cast({:nuevo_mensaje, tipo, message}, state) do
     if state.en_chat do
       timestamp = message.timestamp |> DateTime.to_time() |> Time.to_string() |> String.slice(0, 8)
-      tipo_str = if tipo == :anuncio, do: "📢 ANUNCIO", else: "💬"
+      tipo_str = if tipo == :anuncio, do: "ANUNCIO", else: "MENSAJE"
       IO.puts("\n#{tipo_str} [#{timestamp}] #{message.sender_id}: #{message.contenido}")
       IO.write("> ")
     end
@@ -157,7 +157,7 @@ defmodule ChatClient do
     case opcion do
       "1" -> chat_equipo(nombre)
       "2" -> salas_discusion(nombre)
-      "3" -> desconectarse(nombre); IO.puts("👋 Hasta luego.")
+      "3" -> desconectarse(nombre); IO.puts("Hasta luego.")
       _ -> IO.puts("Opción inválida."); menu(nombre)
     end
   end
@@ -224,7 +224,7 @@ defmodule ChatClient do
 
       "3" ->
         desconectarse(nombre)
-        IO.puts("👋 Saliendo del chat...")
+        IO.puts("Saliendo del chat...")
 
       _ ->
         IO.puts("Opción inválida.")

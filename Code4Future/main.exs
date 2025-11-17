@@ -12,6 +12,255 @@ defmodule Main do
   def main do
     IO.puts("=== GESTIÓN DE HACKATHON ===")
     IO.puts("")
+    mostrar_menu_principal()
+  end
+
+  defp mostrar_menu_principal do
+    IO.puts("MENU PRINCIPAL")
+    IO.puts("¿Qué deseas hacer?")
+    IO.puts("1. Crear equipo completo (equipo + miembros + proyecto + mentor)")
+    IO.puts("2. Usar comandos interactivos")
+    IO.puts("3. Salir")
+    IO.write("Selecciona una opción (1-3): ")
+
+    opcion = IO.read(:line) |> String.trim()
+
+    case opcion do
+      "1" ->
+        flujo_crear_equipo_completo()
+        mostrar_menu_principal()
+
+      "2" ->
+        modo_comandos()
+        mostrar_menu_principal()
+
+      "3" ->
+        IO.puts("¡Gracias por usar el sistema de gestión de hackathon!")
+        IO.puts("¡Hasta luego!")
+
+      _ ->
+        IO.puts("Opción inválida. Intenta de nuevo.")
+        mostrar_menu_principal()
+    end
+  end
+
+  defp modo_comandos do
+    IO.puts("")
+    IO.puts("=== MODO COMANDOS ===")
+    mostrar_ayuda()
+    loop_comandos()
+  end
+
+  defp loop_comandos do
+    IO.write("hackathon> ")
+    comando = IO.read(:line) |> String.trim()
+
+    case procesar_comando(comando) do
+      :salir ->
+        IO.puts("Saliendo del modo comandos...")
+      :continuar ->
+        loop_comandos()
+    end
+  end
+
+  defp procesar_comando(comando) do
+    partes = String.split(comando, " ", trim: true)
+
+    case partes do
+      ["/teams"] ->
+        comando_teams()
+        :continuar
+
+      ["/project", nombre_equipo] ->
+        comando_project(nombre_equipo)
+        :continuar
+
+      ["/join", nombre_equipo] ->
+        comando_join(nombre_equipo)
+        :continuar
+
+      ["/chat", nombre_equipo] ->
+        comando_chat(nombre_equipo)
+        :continuar
+
+      ["/help"] ->
+        mostrar_ayuda()
+        :continuar
+
+      ["exit"] ->
+        :salir
+
+      ["salir"] ->
+        :salir
+
+      [] ->
+        :continuar
+
+      _ ->
+        IO.puts("Comando no reconocido. Escribe /help para ver comandos disponibles.")
+        :continuar
+    end
+  end
+
+  defp comando_teams do
+    equipos = TeamService.listar_equipos()
+
+    if length(equipos) == 0 do
+      IO.puts("No hay equipos registrados.")
+    else
+      IO.puts("EQUIPOS REGISTRADOS:")
+      IO.puts("==================")
+      Enum.each(equipos, fn equipo ->
+        proyecto = ProjectService.obtener_proyecto_por_equipo(equipo.id)
+        proyecto_info = if proyecto, do: " - Proyecto: #{proyecto.titulo}", else: " - Sin proyecto"
+
+        IO.puts("#{equipo.nombre} (#{length(equipo.miembros)} miembros)#{proyecto_info}")
+      end)
+      IO.puts("")
+    end
+  end
+
+  defp comando_project(nombre_equipo) do
+    case TeamService.obtener_equipo_por_nombre(nombre_equipo) do
+      nil ->
+        IO.puts("Equipo '#{nombre_equipo}' no encontrado.")
+
+      equipo ->
+        case ProjectService.obtener_proyecto_por_equipo(equipo.id) do
+          nil ->
+            IO.puts("El equipo '#{nombre_equipo}' no tiene proyecto asignado.")
+
+          proyecto ->
+            IO.puts("INFORMACIÓN DEL PROYECTO - #{nombre_equipo}")
+            IO.puts("=========================================")
+            IO.puts("Título: #{proyecto.titulo}")
+            IO.puts("Descripción: #{proyecto.descripcion}")
+            IO.puts("Categoría: #{proyecto.categoria}")
+            IO.puts("Progreso: #{proyecto.progreso}%")
+            IO.puts("Miembros del equipo: #{length(equipo.miembros)}")
+
+            if length(proyecto.feedbacks) > 0 do
+              IO.puts("Feedbacks recibidos: #{length(proyecto.feedbacks)}")
+              IO.puts("Último feedback: #{List.first(proyecto.feedbacks)}")
+            else
+              IO.puts("Sin feedbacks aún.")
+            end
+
+            # Mostrar mentor si tiene
+            mostrar_mentor_comando(equipo.id)
+            IO.puts("")
+        end
+    end
+  end
+
+  defp comando_join(nombre_equipo) do
+    case TeamService.obtener_equipo_por_nombre(nombre_equipo) do
+      nil ->
+        IO.puts("Equipo '#{nombre_equipo}' no encontrado.")
+        IO.write("¿Deseas crear este equipo? (s/n): ")
+        respuesta = IO.read(:line) |> String.trim() |> String.downcase()
+
+        if respuesta in ["s", "si", "yes", "y"] do
+          TeamService.crear_equipo(nombre_equipo)
+          IO.puts("Equipo '#{nombre_equipo}' creado exitosamente!")
+        end
+
+      equipo ->
+        IO.write("Ingresa tu ID de participante: ")
+        id_input = IO.read(:line) |> String.trim()
+
+        case Integer.parse(id_input) do
+          {id_participante, ""} ->
+            case TeamService.unirse_a_equipo(id_participante, nombre_equipo) do
+              {:ok, _equipo_actualizado} ->
+                IO.puts("¡Te has unido exitosamente al equipo '#{nombre_equipo}'!")
+                mostrar_info_equipo(equipo)
+
+              {:error, mensaje} ->
+                IO.puts("Error al unirse: #{mensaje}")
+            end
+
+          _ ->
+            IO.puts("ID inválido. Debe ser un número.")
+        end
+    end
+    IO.puts("")
+  end
+
+  defp comando_chat(nombre_equipo) do
+    case TeamService.obtener_equipo_por_nombre(nombre_equipo) do
+      nil ->
+        IO.puts("Equipo '#{nombre_equipo}' no encontrado.")
+
+      _equipo ->
+        IO.puts("CHAT DEL EQUIPO: #{nombre_equipo}")
+        IO.puts("================================")
+        IO.puts("Funcionalidad de chat en desarrollo...")
+        IO.puts("Por ahora, usa los servicios de chat separados:")
+        IO.puts("- Para servidor: elixir services/chat_server.exs")
+        IO.puts("- Para cliente: elixir services/chat_client.exs")
+        IO.puts("")
+
+        # Aquí podrías integrar con tu chat_client.exs
+        # Por ejemplo: System.cmd("elixir", ["services/chat_client.exs"])
+    end
+    IO.puts("")
+  end
+
+  defp mostrar_ayuda do
+    IO.puts("COMANDOS DISPONIBLES:")
+    IO.puts("====================")
+    IO.puts("/teams                    → Listar equipos registrados")
+    IO.puts("/project <nombre_equipo>  → Mostrar información del proyecto de un equipo")
+    IO.puts("/join <nombre_equipo>     → Unirse a un equipo")
+    IO.puts("/chat <nombre_equipo>     → Ingresar al canal de chat de un equipo")
+    IO.puts("/help                     → Mostrar esta ayuda")
+    IO.puts("exit / salir              → Salir del modo comandos")
+    IO.puts("")
+    IO.puts("Ejemplos:")
+    IO.puts("  /teams")
+    IO.puts("  /project vengadores")
+    IO.puts("  /join vengadores")
+    IO.puts("  /chat vengadores")
+    IO.puts("")
+  end
+
+  defp mostrar_mentor_comando(team_id) do
+    teams_mentors = MentorService.listar_asignaciones_activas()
+                   |> Enum.filter(fn asignacion -> asignacion.team_id == team_id end)
+
+    if length(teams_mentors) > 0 do
+      IO.puts("Mentor asignado:")
+      Enum.each(teams_mentors, fn asignacion ->
+        mentores = MentorService.list_mentors()
+        mentor = Enum.find(mentores, fn m -> m.id == asignacion.mentor_id end)
+
+        if mentor do
+          experiencia_str = Enum.join(mentor.experiencia, ", ")
+          IO.puts("  - #{mentor.nombre} (#{experiencia_str})")
+        end
+      end)
+    else
+      IO.puts("Sin mentor asignado")
+    end
+  end
+
+  defp mostrar_info_equipo(equipo) do
+    IO.puts("INFORMACIÓN DEL EQUIPO:")
+    IO.puts("Nombre: #{equipo.nombre}")
+    IO.puts("Miembros actuales: #{length(equipo.miembros)}")
+
+    if length(equipo.miembros) > 0 do
+      IO.puts("Lista de miembros:")
+      Enum.each(equipo.miembros, fn miembro ->
+        IO.puts("  - #{miembro.nombre} (ID: #{miembro.id})")
+      end)
+    end
+  end
+
+  defp flujo_crear_equipo_completo do
+    IO.puts("")
+    IO.puts("=== CREAR EQUIPO COMPLETO ===")
 
     # Crear equipo
     equipo = crear_equipo()
@@ -22,12 +271,18 @@ defmodule Main do
     # Crear proyecto para el equipo
     crear_proyecto_para_equipo(equipo)
 
-    # Registrar mentor (NUEVO)
+    # Registrar mentor
     registrar_mentor_para_equipo(equipo)
 
     # Mostrar resultado final
     mostrar_resumen_final(equipo.nombre)
+
+    IO.puts("")
+    IO.write("Presiona Enter para continuar...")
+    IO.read(:line)
   end
+
+  # ... resto de funciones existentes (crear_equipo, agregar_miembros, etc.) ...
 
   defp crear_equipo do
     IO.puts("CREAR NUEVO EQUIPO")
@@ -152,14 +407,14 @@ defmodule Main do
     nombre = solicitar_nombre_mentor()
     experiencia = solicitar_experiencia_mentor()
 
-    case MentorService.register_mentor(nombre, experiencia) do
+    case MentorService.registrar_mentor(nombre, experiencia) do
       {:ok, mentor} ->
         IO.puts("Mentor '#{mentor.nombre}' registrado exitosamente!")
         IO.puts("ID del mentor: #{mentor.id}")
         IO.puts("Experiencia: #{Enum.join(mentor.experiencia, ", ")}")
         IO.puts("")
 
-        case MentorService.assign_to_team(mentor.id, team_id) do
+        case MentorService.asignar_a_team(mentor.id, team_id) do
           {:ok, _asignacion} ->
             IO.puts("Mentor asignado al equipo exitosamente!")
             enviar_feedback_inicial(mentor.id, team_id)
@@ -197,7 +452,7 @@ defmodule Main do
         {numero, ""} when numero > 0 and numero <= length(mentores) ->
           mentor_seleccionado = Enum.at(mentores, numero - 1)
 
-          case MentorService.assign_to_team(mentor_seleccionado.id, team_id) do
+          case MentorService.asignar_a_team(mentor_seleccionado.id, team_id) do
             {:ok, _asignacion} ->
               IO.puts("Mentor #{mentor_seleccionado.nombre} asignado al equipo!")
               enviar_feedback_inicial(mentor_seleccionado.id, team_id)
@@ -292,7 +547,7 @@ defmodule Main do
         feedback = IO.read(:line) |> String.trim()
 
         if feedback != "" do
-          case MentorService.send_feedback(mentor_id, team_id, feedback) do
+          case MentorService.enviar_feedback(mentor_id, team_id, feedback) do
             {:ok, _feedback_record} ->
               IO.puts("Feedback inicial enviado!")
             {:error, mensaje} ->
@@ -475,7 +730,7 @@ defmodule Main do
   end
 
   defp mostrar_mentor_asignado(team_id) do
-    teams_mentors = MentorService.list_mentors()
+    teams_mentors = MentorService.listar_asignaciones_activas()
                    |> Enum.filter(fn asignacion -> asignacion.team_id == team_id end)
 
     if length(teams_mentors) > 0 do
@@ -490,7 +745,7 @@ defmodule Main do
           IO.puts("Experiencia: #{experiencia_str}")
           IO.puts("Asignado: #{DateTime.to_date(asignacion.assigned_at)}")
 
-          feedbacks = MentorService.get_team_feedbacks(team_id)
+          feedbacks = MentorService.obtener_feedbacks_por_equipo(team_id)
           if length(feedbacks) > 0 do
             IO.puts("Feedbacks recibidos: #{length(feedbacks)}")
           end

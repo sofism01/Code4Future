@@ -3,3 +3,5 @@ id, team_id, titulo, descripcion, categoria, progreso, feedbacks
 7110, 4230, el diamante, una pagina web que permite comprar facilmente, Web, 0, 
 7624, 4232, titulo, descripcion, IoT, 0, 
 8133, 4229, ABC, DEsc, Web, 90, 
+13317, 7365, proyecto final, proyecto final del curso p3, Web, 45, 
+26117, 15493, proyecto elixir, proyecto de hackathon en elixir sin GUI, Desktop, 60, 
